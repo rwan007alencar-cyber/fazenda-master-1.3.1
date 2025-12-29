@@ -185,10 +185,11 @@ const App: React.FC = () => {
   };
 
   const handlePlant = (plotId: number, crop: CropType) => {
-    if (!state.ownedFarmId || (state.seedInventory[crop] || 0) <= 0) return;
+    // Explicit casting to number to prevent 'unknown' operator issues in some TS environments
+    if (!state.ownedFarmId || ((state.seedInventory[crop] as number) || 0) <= 0) return;
     setState(prev => {
       const newSeeds = { ...prev.seedInventory };
-      newSeeds[crop] -= 1;
+      newSeeds[crop] = ((newSeeds[crop] as number) || 0) - 1;
       return {
         ...prev,
         seedInventory: newSeeds,
@@ -199,7 +200,8 @@ const App: React.FC = () => {
 
   const handleMassPlant = (crop: CropType) => {
     setState(prev => {
-      let seedsAvailable = prev.seedInventory[crop] || 0;
+      // Explicit casting to number to ensure seedsAvailable is treated as number and avoid 'unknown' errors
+      let seedsAvailable = (prev.seedInventory[crop] as number) || 0;
       if (seedsAvailable <= 0) return prev;
       const newPlots = prev.plots.map(plot => {
         if (!plot.crop && seedsAvailable > 0) {
@@ -220,10 +222,11 @@ const App: React.FC = () => {
   const handleHarvest = (plotId: number) => {
     const plot = state.plots.find(p => p.id === plotId);
     if (!plot || !plot.crop || !plot.isHarvestable) return;
-    if ((state.inventory[plot.crop] || 0) >= siloCapacityPerCrop) return;
+    // Explicit casting to avoid potential 'unknown' comparison error with siloCapacityPerCrop
+    if (((state.inventory[plot.crop] as number) || 0) >= siloCapacityPerCrop) return;
     setState(prev => {
       const newInventory = { ...prev.inventory };
-      newInventory[plot.crop!] = (newInventory[plot.crop!] || 0) + 1;
+      newInventory[plot.crop!] = ((newInventory[plot.crop!] as number) || 0) + 1;
       return handleLevelUp({
         ...prev,
         inventory: newInventory,
@@ -239,7 +242,8 @@ const App: React.FC = () => {
       let changed = false;
       const newPlots = prev.plots.map(plot => {
         if (plot.isHarvestable && plot.crop) {
-          const currentInSilo = newInventory[plot.crop] || 0;
+          // Explicit casting to number to avoid 'unknown' comparison and arithmetic errors
+          const currentInSilo = (newInventory[plot.crop] as number) || 0;
           if (currentInSilo < siloCapacityPerCrop) {
             newInventory[plot.crop] = currentInSilo + 1;
             totalXpGained += 25;
@@ -255,7 +259,8 @@ const App: React.FC = () => {
   };
 
   const handleSellCrop = (resourceName: string) => {
-    const qty = state.inventory[resourceName] || 0;
+    // Explicit casting to number to ensure qty is a valid number for arithmetic operations
+    const qty = (state.inventory[resourceName] as number) || 0;
     if (qty <= 0) return;
     let basePrice = 0;
     if (CROPS[resourceName as CropType]) basePrice = CROPS[resourceName as CropType].salePrice;
@@ -277,7 +282,9 @@ const App: React.FC = () => {
     let totalIncome = 0;
     const itemsSold: string[] = [];
     
-    Object.entries(state.inventory).forEach(([resourceName, qty]) => {
+    Object.entries(state.inventory).forEach(([resourceName, qtyValue]) => {
+      // Cast index value to number to avoid 'unknown' comparison issues
+      const qty = qtyValue as number;
       if (qty <= 0) return;
       
       let basePrice = 0;
@@ -311,7 +318,7 @@ const App: React.FC = () => {
     addTransaction('expense', totalCost, `Compra de ${quantity}x Sementes de ${crop}`, 'Mercado');
     setState(prev => {
       const newSeeds = { ...prev.seedInventory };
-      newSeeds[crop] = (newSeeds[crop] || 0) + quantity;
+      newSeeds[crop] = ((newSeeds[crop] as number) || 0) + quantity;
       return { ...prev, money: prev.money - totalCost, seedInventory: newSeeds };
     });
   };
@@ -333,7 +340,7 @@ const App: React.FC = () => {
       if (!animal || !animal.isReady) return prev;
       const animalData = ANIMALS[animal.type];
       const newInventory = { ...prev.inventory };
-      newInventory[animalData.resourceName] = (newInventory[animalData.resourceName] || 0) + 1;
+      newInventory[animalData.resourceName] = ((newInventory[animalData.resourceName] as number) || 0) + 1;
       const newAnimals = prev.animals.map(a => a.id === id ? { ...a, isReady: false, lastProducedAt: Date.now() } : a);
       return handleLevelUp({ ...prev, inventory: newInventory, animals: newAnimals }, prev.xp + 50);
     });
@@ -347,7 +354,7 @@ const App: React.FC = () => {
       const newAnimals = prev.animals.map(animal => {
         if (animal.isReady) {
           const animalData = ANIMALS[animal.type];
-          newInventory[animalData.resourceName] = (newInventory[animalData.resourceName] || 0) + 1;
+          newInventory[animalData.resourceName] = ((newInventory[animalData.resourceName] as number) || 0) + 1;
           totalXpGained += 50;
           changed = true;
           return { ...animal, isReady: false, lastProducedAt: Date.now() };
@@ -446,7 +453,7 @@ const App: React.FC = () => {
                   </div>
                   <div className="farm-grid">
                     {state.plots.map((plot, index) => (
-                      <FarmPlotComponent key={`${plot.id}-${index}`} plot={plot} playerLevel={state.level} seedInventory={state.seedInventory} efficiencyMultiplier={efficiencyMultiplier} siloCapacity={siloCapacityPerCrop} currentCropStock={plot.crop ? state.inventory[plot.crop] || 0 : 0} onPlant={(crop) => handlePlant(plot.id, crop)} onHarvest={(e) => handleHarvest(plot.id)} />
+                      <FarmPlotComponent key={`${plot.id}-${index}`} plot={plot} playerLevel={state.level} seedInventory={state.seedInventory} efficiencyMultiplier={efficiencyMultiplier} siloCapacity={siloCapacityPerCrop} currentCropStock={plot.crop ? (state.inventory[plot.crop] as number) || 0 : 0} onPlant={(crop) => handlePlant(plot.id, crop)} onHarvest={(e) => handleHarvest(plot.id)} />
                     ))}
                   </div>
                 </>
