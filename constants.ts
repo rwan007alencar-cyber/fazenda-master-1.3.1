@@ -185,7 +185,7 @@ export const FARM_TIERS: FarmTier[] = [
 ];
 
 export const INITIAL_STATE: GameState = {
-  money: 150000
+  money: 150000,
   level: 1,
   xp: 0,
   plots: [],

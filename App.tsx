@@ -31,7 +31,9 @@ const App: React.FC = () => {
         inventory: parsed.inventory || {},
         seedInventory: parsed.seedInventory || INITIAL_STATE.seedInventory,
         financialHistory: parsed.financialHistory || [],
-        evolutionHistory: parsed.evolutionHistory || []
+        evolutionHistory: parsed.evolutionHistory || [],
+        staffCount: parsed.staffCount || 1,
+        machineryCount: parsed.machineryCount || 0
       };
     } catch (e) {
       console.error("Erro ao carregar save:", e);
@@ -53,12 +55,12 @@ const App: React.FC = () => {
   const STAFF_LIMIT = 38;
   const MACHINERY_LIMIT = 15;
 
-  // Preço Equipe: Inicia em 3.500 e termina em 3.500.000 no nível 38
-  // Razão calculada para 37 saltos: (3500000 / 3500) ^ (1/37) ≈ 1.2062
+  // Preço Equipe: Inicia em 3.500 e termina em 3.500.000 no nível 38 (37º compra)
+  // Razão calculada: (3500000 / 3500) ^ (1/37) ≈ 1.2062
   const currentStaffPrice = state.staffCount >= STAFF_LIMIT ? 0 : Math.floor(3500 * Math.pow(1.2062, state.staffCount - 1));
   
   // Preço Frota: Inicia em 5.000 e termina em 10.240.000 no nível 15
-  // Razão calculada para 14 saltos: (10240000 / 5000) ^ (1/14) ≈ 1.7191
+  // Razão calculada: (10240000 / 5000) ^ (1/14) ≈ 1.7191
   const currentMachineryPrice = state.machineryCount >= MACHINERY_LIMIT ? 0 : Math.floor(5000 * Math.pow(1.7191, state.machineryCount));
   
   const currentFarmData = FARM_TIERS.find(t => t.id === state.ownedFarmId);
@@ -428,7 +430,7 @@ const App: React.FC = () => {
                         }`}
                       >
                         <i className="fas fa-expand"></i> 
-                        {canExpandMore ? `Expandir Lote (R$ ${plotExpansionPrice.toLocaleString()})` : 'Limite de Expansão Atingido'}
+                        {canExpandMore ? `Expandir Lote (R$ ${plotExpansionPrice.toLocaleString('pt-BR')})` : 'Limite de Expansão Atingido'}
                       </button>
                       {state.autoPlantUnlocked && (
                         <button onClick={() => setShowMassPlantPicker(true)} className="px-5 py-3 bg-blue-600 text-white border-2 border-blue-500 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
